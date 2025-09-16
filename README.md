@@ -15,6 +15,12 @@ A minimalist Unix-like shell written in Rust for embedded Linux systems.
 - `pwd` - Print working directory
 - `cd [path]` - Change directory (supports `~` expansion)
 - `echo [args...]` - Print arguments
+- `ls [flags] [path]` - List directory contents
+  - `-a` - Show hidden files (starting with `.`)
+  - `-l` - Long format (permissions, links, owner, size, time)
+  - `-F` - Classify files (`/` for directories, `*` for executables)
+  - Flags can be combined: `-la`, `-alF`, etc.
+- `cat [file1] [file2] ...` - Concatenate and display file contents
 
 ## Building and Running
 

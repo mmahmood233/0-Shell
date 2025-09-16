@@ -56,6 +56,12 @@ fn execute_command(input: &str) {
         "echo" => {
             echo::execute(&args);
         }
+        "ls" => {
+            ls::execute(&args);
+        }
+        "cat" => {
+            cat::execute(&args);
+        }
         _ => {
             println!("Command '{}' not found", command);
         }
