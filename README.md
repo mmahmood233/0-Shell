@@ -21,6 +21,9 @@ A minimalist Unix-like shell written in Rust for embedded Linux systems.
   - `-F` - Classify files (`/` for directories, `*` for executables)
   - Flags can be combined: `-la`, `-alF`, etc.
 - `cat [file1] [file2] ...` - Concatenate and display file contents
+- `cp <source> <destination>` - Copy files (preserves permissions)
+- `rm [-r] <file1> [file2] ...` - Remove files and directories
+  - `-r` - Remove directories recursively
 
 ## Building and Running
 
