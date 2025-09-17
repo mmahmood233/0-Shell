@@ -68,6 +68,12 @@ fn execute_command(input: &str) {
         "rm" => {
             rm::execute(&args);
         }
+        "mv" => {
+            mv::execute(&args);
+        }
+        "mkdir" => {
+            mkdir::execute(&args);
+        }
         _ => {
             println!("Command '{}' not found", command);
         }
