@@ -20,7 +20,7 @@ pub fn execute(args: &[String]) {
     
     // Parse arguments
     for arg in args.iter() {
-        if arg.starts_with('-') {
+        if arg.starts_with('-') && arg.len() > 1 {
             // Parse flags
             for ch in arg.chars().skip(1) {
                 match ch {
@@ -31,6 +31,9 @@ pub fn execute(args: &[String]) {
                     }
                 }
             }
+        } else if arg == "-" {
+            // Bare dash is treated as a filename (POSIX behavior)
+            files.push(arg.as_str());
         } else {
             // File/directory argument
             files.push(arg.as_str());
