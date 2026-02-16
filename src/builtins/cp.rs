@@ -1,54 +1,101 @@
+//! # cp - Copy Files
+//!
+//! Copies files from source to destination, preserving permissions.
+
 use std::fs;
 use std::path::Path;
 
-/// Copy files from source to destination
-/// Usage: cp <source> <destination>
-/// Note: Directory copying is not supported in this minimal implementation
+/// Executes the `cp` command.
+///
+/// Copies a file from source to destination. If the destination is a directory,
+/// the file is copied into that directory with the same name.
+///
+/// # Arguments
+/// * `args` - Command arguments: [source, destination]
+///
+/// # Examples
+/// ```
+/// $ cp file.txt backup.txt      # Copy to new file
+/// $ cp file.txt mydir/          # Copy into directory
+/// ```
+///
+/// # Errors
+/// Prints error messages to stderr for:
+/// - Wrong number of arguments
+/// - Source file does not exist
+/// - Source is a directory (not supported)
+/// - Permission denied
+/// - I/O errors
+///
+/// # Note
+/// Directory copying is not supported in this minimal implementation.
+/// File permissions are preserved during the copy operation.
 pub fn execute(args: &[String]) {
+    // Require exactly two arguments: source and destination
     if args.len() != 2 {
         eprintln!("cp: usage: cp <source> <destination>");
         return;
     }
     
+    // Extract source and destination paths
     let source = args[0].as_str();
     let destination = args[1].as_str();
     
+    // Perform the copy operation
     if let Err(e) = copy_file(source, destination) {
         eprintln!("cp: {}", e);
     }
 }
 
+/// Copies a single file from source to destination.
+///
+/// # Arguments
+/// * `source` - Path to the source file
+/// * `destination` - Path to the destination (file or directory)
+///
+/// # Returns
+/// * `Ok(())` - File was successfully copied
+/// * `Err` - Copy operation failed (with error description)
+///
+/// # Behavior
+/// - Validates that source exists and is a regular file
+/// - If destination is a directory, copies file into it with same name
+/// - Preserves file permissions from source to destination
+/// - Overwrites destination file if it already exists
 fn copy_file(source: &str, destination: &str) -> Result<(), Box<dyn std::error::Error>> {
     let source_path = Path::new(source);
     let dest_path = Path::new(destination);
     
-    // Validate source file
+    // Validate that source file exists
     if !source_path.exists() {
         return Err(format!("{}: No such file or directory", source).into());
     }
     
+    // Ensure source is not a directory
     if source_path.is_dir() {
         return Err(format!("{}: Is a directory (directory copying not supported)", source).into());
     }
     
+    // Ensure source is a regular file
     if !source_path.is_file() {
         return Err(format!("{}: Not a regular file", source).into());
     }
     
-    // Handle destination path
+    // Determine the final destination path
     let final_dest_path = if dest_path.is_dir() {
-        // If destination is a directory, copy file into it with same name
+        // Destination is a directory - copy file into it with same name
         let file_name = source_path.file_name()
             .ok_or("Invalid source file name")?;
         dest_path.join(file_name)
     } else {
+        // Destination is a file path - use it as-is
         dest_path.to_path_buf()
     };
     
-    // Perform the copy
+    // Copy the file contents
     fs::copy(source_path, &final_dest_path)?;
     
-    // Preserve file permissions
+    // Preserve file permissions from source
     let source_metadata = fs::metadata(source_path)?;
     let permissions = source_metadata.permissions();
     fs::set_permissions(&final_dest_path, permissions)?;

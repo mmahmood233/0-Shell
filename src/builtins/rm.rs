@@ -1,27 +1,59 @@
+//! # rm - Remove Files and Directories
+//!
+//! Removes files and directories from the filesystem.
+
 use std::fs;
 use std::path::Path;
 
+/// Flags for controlling rm behavior.
 #[derive(Default)]
 struct RmFlags {
-    recursive: bool,  // -r flag
+    recursive: bool,  // -r flag: enable recursive directory removal
 }
 
-/// Remove files and directories
-/// Usage: rm [-r] <file1> [file2] ...
-/// -r: Remove directories recursively
+/// Executes the `rm` command.
+///
+/// Removes one or more files or directories. Directories require the `-r` flag.
+///
+/// # Arguments
+/// * `args` - Command arguments (flags and file/directory paths)
+///
+/// # Supported Flags
+/// - `-r` - Recursive: remove directories and their contents
+///
+/// # Examples
+/// ```
+/// $ rm file.txt              # Remove a file
+/// $ rm file1.txt file2.txt   # Remove multiple files
+/// $ rm -r directory/         # Remove directory recursively
+/// ```
+///
+/// # Errors
+/// Prints error messages to stderr for:
+/// - No files specified
+/// - Invalid flag
+/// - File/directory does not exist
+/// - Directory without -r flag
+/// - Permission denied
+///
+/// # Safety
+/// This command permanently deletes files and directories.
+/// Use with caution, especially with the `-r` flag.
 pub fn execute(args: &[String]) {
+    // Require at least one argument
     if args.is_empty() {
         eprintln!("rm: missing operand");
         return;
     }
     
+    // Initialize flags and file list
     let mut flags = RmFlags::default();
     let mut files = Vec::new();
     
-    // Parse arguments
+    // Parse arguments (flags and file paths)
     for arg in args.iter() {
         if arg.starts_with('-') && arg.len() > 1 {
-            // Parse flags
+            // Argument is a flag - parse each character after the dash
             for ch in arg.chars().skip(1) {
                 match ch {
                     'r' => flags.recursive = true,
@@ -35,17 +67,18 @@ pub fn execute(args: &[String]) {
             // Bare dash is treated as a filename (POSIX behavior)
             files.push(arg.as_str());
         } else {
-            // File/directory argument
+            // Regular file/directory argument
             files.push(arg.as_str());
         }
     }
     
+    // Ensure at least one file was specified
     if files.is_empty() {
         eprintln!("rm: missing operand");
         return;
     }
     
-    // Remove each file/directory
+    // Remove each file/directory in order
     for file in files {
         if let Err(e) = remove_path(file, &flags) {
             eprintln!("rm: {}: {}", file, e);
@@ -53,9 +86,25 @@ pub fn execute(args: &[String]) {
     }
 }
 
+/// Removes a single file or directory.
+///
+/// # Arguments
+/// * `path_str` - Path to the file or directory to remove
+/// * `flags` - Flags controlling removal behavior
+///
+/// # Returns
+/// * `Ok(())` - Path was successfully removed
+/// * `Err` - Removal failed (with error description)
+///
+/// # Behavior
+/// - Files are removed directly
+/// - Directories require the recursive flag to be set
+/// - With recursive flag, removes directory and all contents
+/// - Fails if path does not exist
 fn remove_path(path_str: &str, flags: &RmFlags) -> Result<(), Box<dyn std::error::Error>> {
     let path = Path::new(path_str);
     
+    // Validate that the path exists
     if !path.exists() {
         return Err("No such file or directory".into());
     }
@@ -65,12 +114,14 @@ fn remove_path(path_str: &str, flags: &RmFlags) -> Result<(), Box<dyn std::error
         fs::remove_file(path)?;
     } else if path.is_dir() {
         if flags.recursive {
-            // Remove directory recursively
+            // Remove directory and all its contents recursively
             fs::remove_dir_all(path)?;
         } else {
+            // Directory removal requires -r flag
             return Err("Is a directory (use -r to remove directories)".into());
         }
     } else {
+        // Path exists but is neither file nor directory (e.g., symlink)
         return Err("Not a regular file or directory".into());
     }
     

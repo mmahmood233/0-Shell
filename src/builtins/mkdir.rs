@@ -1,36 +1,77 @@
+//! # mkdir - Make Directories
+//!
+//! Creates one or more directories.
+
 use std::fs;
 use std::path::Path;
 
-/// Create directories
-/// Usage: mkdir <dir1> [dir2] ...
-/// Note: Parent directory creation (-p flag) is not supported in this minimal implementation
+/// Executes the `mkdir` command.
+///
+/// Creates one or more directories. Each directory is created independently.
+/// Parent directories must already exist.
+///
+/// # Arguments
+/// * `args` - Vector of directory names to create
+///
+/// # Examples
+/// ```
+/// $ mkdir newdir
+/// $ mkdir dir1 dir2 dir3
+/// ```
+///
+/// # Errors
+/// Prints error messages to stderr for:
+/// - No directory names provided
+/// - Directory already exists
+/// - Parent directory does not exist
+/// - Permission denied
+///
+/// # Note
+/// The `-p` flag (create parent directories) is not supported in this minimal implementation.
 pub fn execute(args: &[String]) {
+    // Require at least one directory name
     if args.is_empty() {
         eprintln!("mkdir: missing operand");
         return;
     }
     
-    // Create each directory
+    // Create each directory independently
     for dir_name in args.iter() {
+        // Attempt to create the directory, print error if it fails
         if let Err(e) = create_directory(dir_name.as_str()) {
             eprintln!("mkdir: {}: {}", dir_name, e);
         }
     }
 }
 
+/// Creates a single directory.
+///
+/// # Arguments
+/// * `dir_name` - Name/path of the directory to create
+///
+/// # Returns
+/// * `Ok(())` - Directory was successfully created
+/// * `Err` - Directory could not be created (with error description)
+///
+/// # Behavior
+/// - Fails if the path already exists (file or directory)
+/// - Fails if parent directory does not exist
+/// - Creates directory with default permissions
 fn create_directory(dir_name: &str) -> Result<(), Box<dyn std::error::Error>> {
     let path = Path::new(dir_name);
     
-    // Check if directory already exists
+    // Check if the path already exists
     if path.exists() {
         if path.is_dir() {
+            // Path exists and is a directory
             return Err("File exists".into());
         } else {
+            // Path exists but is not a directory (it's a file)
             return Err("File exists (not a directory)".into());
         }
     }
     
-    // Create the directory
+    // Create the directory (parent must exist)
     fs::create_dir(path)?;
     
     Ok(())

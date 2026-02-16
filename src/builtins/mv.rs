@@ -1,82 +1,149 @@
+//! # mv - Move/Rename Files and Directories
+//!
+//! Moves or renames files and directories, with cross-filesystem support.
+
 use std::fs;
 use std::path::Path;
 use std::io::ErrorKind;
 
-/// Move/rename files and directories
-/// Usage: mv <source> <destination>
-/// Handles cross-filesystem moves by falling back to copy+remove
+/// Executes the `mv` command.
+///
+/// Moves or renames a file or directory from source to destination.
+/// If destination is a directory, moves source into it with the same name.
+///
+/// # Arguments
+/// * `args` - Command arguments: [source, destination]
+///
+/// # Examples
+/// ```
+/// $ mv oldname.txt newname.txt    # Rename file
+/// $ mv file.txt mydir/            # Move into directory
+/// $ mv dir1 dir2                  # Rename directory
+/// ```
+///
+/// # Errors
+/// Prints error messages to stderr for:
+/// - Wrong number of arguments
+/// - Source does not exist
+/// - Permission denied
+/// - Cross-device directory moves (not supported)
+///
+/// # Implementation Details
+/// - Uses atomic `rename()` when source and destination are on same filesystem
+/// - Falls back to copy+remove for cross-filesystem file moves
+/// - Preserves file permissions during cross-filesystem moves
+/// - Cross-filesystem directory moves are not supported
 pub fn execute(args: &[String]) {
+    // Require exactly two arguments: source and destination
     if args.len() != 2 {
         eprintln!("mv: usage: mv <source> <destination>");
         return;
     }
     
+    // Extract source and destination paths
     let source = args[0].as_str();
     let destination = args[1].as_str();
     
+    // Perform the move/rename operation
     if let Err(e) = move_file(source, destination) {
         eprintln!("mv: {}", e);
     }
 }
 
+/// Moves or renames a file or directory.
+///
+/// # Arguments
+/// * `source` - Path to the source file/directory
+/// * `destination` - Path to the destination (file/directory)
+///
+/// # Returns
+/// * `Ok(())` - Move/rename was successful
+/// * `Err` - Operation failed (with error description)
+///
+/// # Strategy
+/// 1. Try atomic rename (fast, works on same filesystem)
+/// 2. If cross-device error, fall back to copy+remove (files only)
+/// 3. Preserve permissions during copy+remove
 fn move_file(source: &str, destination: &str) -> Result<(), Box<dyn std::error::Error>> {
     let source_path = Path::new(source);
     let dest_path = Path::new(destination);
     
-    // Validate source
+    // Validate that source exists
     if !source_path.exists() {
         return Err(format!("{}: No such file or directory", source).into());
     }
     
-    // Handle destination path
+    // Determine the final destination path
     let final_dest_path = if dest_path.is_dir() {
-        // If destination is a directory, move file into it with same name
+        // Destination is a directory - move source into it with same name
         let file_name = source_path.file_name()
             .ok_or("Invalid source file name")?;
         dest_path.join(file_name)
     } else {
+        // Destination is a file path - use it as-is
         dest_path.to_path_buf()
     };
     
-    // Check if source and destination are the same
+    // Check if source and destination are the same (no-op)
     if source_path == final_dest_path {
+        // Source and destination are identical - nothing to do
         return Ok(()); // No-op, same as Unix mv behavior
     }
     
-    // Try atomic rename first
+    // Attempt atomic rename (fast, works on same filesystem)
     match fs::rename(source_path, &final_dest_path) {
         Ok(()) => Ok(()),
         Err(e) => {
-            // Check if this is a cross-device error
+            // Check if this is a cross-device/cross-filesystem error
             if e.kind() == ErrorKind::CrossesDevices || 
-               e.raw_os_error() == Some(18) { // EXDEV on Unix
-                // Fall back to copy + remove
+               e.raw_os_error() == Some(18) { // EXDEV error code on Unix
+                // Rename failed due to cross-filesystem move
+                // Fall back to copy+remove strategy
                 copy_and_remove(source_path, &final_dest_path)
             } else {
+                // Other error (permission denied, etc.)
                 Err(format!("{}: {}", source, e).into())
             }
         }
     }
 }
 
+/// Fallback strategy for cross-filesystem moves.
+///
+/// # Arguments
+/// * `source` - Source path
+/// * `destination` - Destination path
+///
+/// # Returns
+/// * `Ok(())` - Copy+remove was successful
+/// * `Err` - Operation failed
+///
+/// # Implementation
+/// 1. Copy source to destination
+/// 2. Preserve permissions
+/// 3. Remove original source
+///
+/// # Limitations
+/// Only supports files. Cross-filesystem directory moves are not supported.
 fn copy_and_remove(source: &Path, destination: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    // Copy the file/directory
+    // Handle based on source type
     if source.is_file() {
-        // Copy file
+        // Copy file contents to destination
         fs::copy(source, destination)?;
         
-        // Preserve permissions
+        // Preserve file permissions from source
         let source_metadata = fs::metadata(source)?;
         let permissions = source_metadata.permissions();
         fs::set_permissions(destination, permissions)?;
         
-        // Remove original file
+        // Remove the original source file
         fs::remove_file(source)?;
     } else if source.is_dir() {
-        // For directories, we'd need recursive copy+remove
-        // This is complex, so for now we'll return an error
+        // Directory moves across filesystems require recursive copy
+        // This is complex and not supported in this minimal implementation
         return Err("Cross-device directory moves not supported in this minimal implementation".into());
     } else {
+        // Source is neither file nor directory (e.g., symlink)
         return Err("Source is not a regular file or directory".into());
     }
     

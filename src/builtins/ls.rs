@@ -1,24 +1,69 @@
+//! # ls - List Directory Contents
+//!
+//! Lists files and directories with support for various display options.
+
 use std::fs;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
 
+/// Flags for controlling ls output format.
 #[derive(Default)]
 struct LsFlags {
-    show_all: bool,      // -a flag
-    long_format: bool,   // -l flag  
-    classify: bool,      // -F flag
+    show_all: bool,      // -a flag: show hidden files (starting with .)
+    long_format: bool,   // -l flag: long format with details
+    classify: bool,      // -F flag: append indicators (/, *, etc.)
 }
 
-/// List directory contents with support for -a, -l, -F flags
+/// Executes the `ls` command.
+///
+/// Lists the contents of a directory with optional formatting flags.
+/// Flags can be combined (e.g., `-la`, `-lF`, `-laF`).
+///
+/// # Arguments
+/// * `args` - Command arguments (flags and optional directory path)
+///
+/// # Supported Flags
+/// - `-a` - Show all files, including hidden files (starting with `.`)
+/// - `-l` - Long format: permissions, links, owner, size, time, name
+/// - `-F` - Classify: append `/` to directories, `*` to executables
+///
+/// # Examples
+/// ```
+/// $ ls
+/// file1.txt
+/// dir1
+///
+/// $ ls -l
+/// -rw-r--r--   1 501:20      100 16:00 file1.txt
+/// drwxr-xr-x   2 501:20       64 16:00 dir1/
+///
+/// $ ls -a
+/// .
+/// ..
+/// .hidden
+/// file1.txt
+///
+/// $ ls -F
+/// file1.txt
+/// dir1/
+/// script.sh*
+/// ```
+///
+/// # Errors
+/// Prints error messages to stderr for:
+/// - Invalid flag
+/// - Directory does not exist
+/// - Permission denied
 pub fn execute(args: &[String]) {
+    // Initialize flags and default path
     let mut flags = LsFlags::default();
     let mut path = ".";  // Default to current directory
     
-    // Parse arguments
+    // Parse command arguments (flags and path)
     for arg in args.iter() {
         if arg.starts_with('-') {
-            // Parse flags
+            // Argument is a flag - parse each character after the dash
             for ch in arg.chars().skip(1) {
                 match ch {
                     'a' => flags.show_all = true,
@@ -31,12 +76,12 @@ pub fn execute(args: &[String]) {
                 }
             }
         } else {
-            // Path argument
+            // Argument is a path - use it as the directory to list
             path = arg.as_str();
         }
     }
     
-    // List directory contents
+    // List the directory contents with the specified flags
     if let Err(e) = list_directory(path, &flags) {
         eprintln!("ls: {}: {}", path, e);
     }
