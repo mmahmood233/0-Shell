@@ -5,14 +5,14 @@ use std::path::Path;
 /// Concatenate and display file contents
 /// Usage: cat [file1] [file2] ...
 /// If no files specified, reads from stdin (not implemented yet)
-pub fn execute(args: &[&str]) {
+pub fn execute(args: &[String]) {
     if args.is_empty() {
         eprintln!("cat: no files specified");
         return;
     }
     
-    for filename in args {
-        if let Err(e) = cat_file(filename) {
+    for filename in args.iter() {
+        if let Err(e) = cat_file(filename.as_str()) {
             eprintln!("cat: {}: {}", filename, e);
         }
     }

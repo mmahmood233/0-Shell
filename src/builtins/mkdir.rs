@@ -4,15 +4,15 @@ use std::path::Path;
 /// Create directories
 /// Usage: mkdir <dir1> [dir2] ...
 /// Note: Parent directory creation (-p flag) is not supported in this minimal implementation
-pub fn execute(args: &[&str]) {
+pub fn execute(args: &[String]) {
     if args.is_empty() {
         eprintln!("mkdir: missing operand");
         return;
     }
     
     // Create each directory
-    for dir_name in args {
-        if let Err(e) = create_directory(dir_name) {
+    for dir_name in args.iter() {
+        if let Err(e) = create_directory(dir_name.as_str()) {
             eprintln!("mkdir: {}: {}", dir_name, e);
         }
     }

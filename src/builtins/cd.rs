@@ -2,7 +2,7 @@ use std::env;
 use std::path::Path;
 
 /// Change directory - handles cd, cd ~, cd <path>
-pub fn execute(args: &[&str]) {
+pub fn execute(args: &[String]) {
     let target_dir = if args.is_empty() {
         // cd with no args goes to home directory
         match env::var("HOME") {
@@ -12,7 +12,7 @@ pub fn execute(args: &[&str]) {
                 return;
             }
         }
-    } else if args[0] == "~" {
+    } else if args[0].as_str() == "~" {
         // cd ~ goes to home directory
         match env::var("HOME") {
             Ok(home) => home,
@@ -21,11 +21,11 @@ pub fn execute(args: &[&str]) {
                 return;
             }
         }
-    } else if args[0].starts_with("~/") {
+    } else if args[0].as_str().starts_with("~/") {
         // cd ~/path expands ~ to home directory
         match env::var("HOME") {
             Ok(home) => {
-                let path = &args[0][2..]; // Remove "~/"
+                let path = &args[0].as_str()[2..]; // Remove "~/"
                 format!("{}/{}", home, path)
             }
             Err(_) => {
@@ -35,7 +35,7 @@ pub fn execute(args: &[&str]) {
         }
     } else {
         // cd <path> - use the provided path
-        args[0].to_string()
+        args[0].clone()
     };
 
     let path = Path::new(&target_dir);

@@ -1,0 +1,60 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo lock file (optional - some keep it, some ignore it)
+# Cargo.lock
+
+# Test artifacts and temporary files
+/test/
+/testing/
+/testing2/
+
+# Shell scripts output
+*.sh.log
+*.txt.log
+
+# Audit and test results
+/tmp/
+audit_results_*.txt
+0shell_audit_test_*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Log files
+*.log

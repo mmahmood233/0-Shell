@@ -5,14 +5,14 @@ use std::io::ErrorKind;
 /// Move/rename files and directories
 /// Usage: mv <source> <destination>
 /// Handles cross-filesystem moves by falling back to copy+remove
-pub fn execute(args: &[&str]) {
+pub fn execute(args: &[String]) {
     if args.len() != 2 {
         eprintln!("mv: usage: mv <source> <destination>");
         return;
     }
     
-    let source = args[0];
-    let destination = args[1];
+    let source = args[0].as_str();
+    let destination = args[1].as_str();
     
     if let Err(e) = move_file(source, destination) {
         eprintln!("mv: {}", e);

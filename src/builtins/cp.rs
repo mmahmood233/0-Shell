@@ -4,14 +4,14 @@ use std::path::Path;
 /// Copy files from source to destination
 /// Usage: cp <source> <destination>
 /// Note: Directory copying is not supported in this minimal implementation
-pub fn execute(args: &[&str]) {
+pub fn execute(args: &[String]) {
     if args.len() != 2 {
         eprintln!("cp: usage: cp <source> <destination>");
         return;
     }
     
-    let source = args[0];
-    let destination = args[1];
+    let source = args[0].as_str();
+    let destination = args[1].as_str();
     
     if let Err(e) = copy_file(source, destination) {
         eprintln!("cp: {}", e);

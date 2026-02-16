@@ -9,7 +9,7 @@ struct RmFlags {
 /// Remove files and directories
 /// Usage: rm [-r] <file1> [file2] ...
 /// -r: Remove directories recursively
-pub fn execute(args: &[&str]) {
+pub fn execute(args: &[String]) {
     if args.is_empty() {
         eprintln!("rm: missing operand");
         return;
@@ -19,7 +19,7 @@ pub fn execute(args: &[&str]) {
     let mut files = Vec::new();
     
     // Parse arguments
-    for arg in args {
+    for arg in args.iter() {
         if arg.starts_with('-') {
             // Parse flags
             for ch in arg.chars().skip(1) {
@@ -33,7 +33,7 @@ pub fn execute(args: &[&str]) {
             }
         } else {
             // File/directory argument
-            files.push(*arg);
+            files.push(arg.as_str());
         }
     }
     

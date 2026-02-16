@@ -11,12 +11,12 @@ struct LsFlags {
 }
 
 /// List directory contents with support for -a, -l, -F flags
-pub fn execute(args: &[&str]) {
+pub fn execute(args: &[String]) {
     let mut flags = LsFlags::default();
     let mut path = ".";  // Default to current directory
     
     // Parse arguments
-    for arg in args {
+    for arg in args.iter() {
         if arg.starts_with('-') {
             // Parse flags
             for ch in arg.chars().skip(1) {
@@ -32,7 +32,7 @@ pub fn execute(args: &[&str]) {
             }
         } else {
             // Path argument
-            path = arg;
+            path = arg.as_str();
         }
     }
     
