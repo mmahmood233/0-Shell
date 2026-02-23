@@ -19,8 +19,7 @@
 /// Hello World
 /// ```
 ///
-/// # Note
-/// Quote handling is performed by the parser before this function is called.
+
 pub fn execute(args: &[String]) {
     // Handle empty arguments - just print newline
     if args.is_empty() {

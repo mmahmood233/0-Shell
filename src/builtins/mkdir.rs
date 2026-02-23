@@ -26,8 +26,7 @@ use std::path::Path;
 /// - Parent directory does not exist
 /// - Permission denied
 ///
-/// # Note
-/// The `-p` flag (create parent directories) is not supported in this minimal implementation.
+
 pub fn execute(args: &[String]) {
     // Require at least one directory name
     if args.is_empty() {

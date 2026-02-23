@@ -39,10 +39,7 @@
 /// - Quotes are removed from the final tokens
 /// - Mismatched quotes are treated as regular characters
 ///
-/// # Memory Note
-/// The command string is leaked (using `Box::leak`) to provide a `'static` lifetime.
-/// This is acceptable for a long-running shell process where commands are continuously
-/// parsed throughout the program's lifetime.
+
 pub fn parse_command(input: &str) -> (&str, Vec<String>) {
     // Vector to store parsed tokens
     let mut tokens = Vec::new();

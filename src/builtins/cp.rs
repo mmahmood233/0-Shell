@@ -27,9 +27,7 @@ use std::path::Path;
 /// - Permission denied
 /// - I/O errors
 ///
-/// # Note
-/// Directory copying is not supported in this minimal implementation.
-/// File permissions are preserved during the copy operation.
+
 pub fn execute(args: &[String]) {
     // Require exactly two arguments: source and destination
     if args.len() != 2 {
